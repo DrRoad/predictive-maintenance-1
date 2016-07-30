@@ -2,8 +2,8 @@
 setwd("C:/Users/dtakacs/Desktop/Bosch")
 
 # load UDFs
-source("C:/Users/dtakacs/Desktop/Bosch/functionsPlot.r")
-source("C:/Users/dtakacs/Desktop/Bosch/functionsUtility.r")
+source("functionsPlot.r")
+source("functionsUtility.r")
 
 packages <-
   c("ggplot2",
@@ -16,7 +16,8 @@ packages <-
     "ROCR",
     "kernlab",
     "e1071",
-    "nnet")
+    "nnet",
+    "corrplot")
 
 installAndLoadPackages(packages)
 
@@ -57,6 +58,10 @@ labelRow(sampleLabeled,174500,176000,1)
 
 
 ###################################### EDA ######################################
+
+# correlation matrix
+corrTable <- cor(sample[,3:100])
+corrplot(corrTable, method="color", tl.pos="n")
 
 table(sampleLabeled$label)
 round(prop.table(table(sampleLabeled$label)) * 100, digits = 1)
