@@ -7,7 +7,7 @@ createPlotHertz <- function(hertz, sampleSize = nrow(sample)){
           geom_line() + 
           ggtitle(paste(hertz,"Hz - Sample size:", sampleSize)) + 
           scale_y_continuous(name="Value", labels = comma) +
-          scale_x_continuous(name = "Elapsed Ms" , breaks = seq(0,600000,60000))
+          scale_x_continuous(name = "Elapsed Ms" , breaks = seq(0,max(sample$timeMs),2000))
   return(plot)
 }
 

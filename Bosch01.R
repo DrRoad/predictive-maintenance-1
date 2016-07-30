@@ -33,6 +33,28 @@ setupDataFrame(sampleFull, sampleRate, windowsSize, timeFrameMilliSecond)
 
 sample <- sampleFull[293:2074, ]
 
+###################################### Label dataset for given Hz #########################
+
+# "telefoncsörgés" (1610-1680 Hz) ábrázolása első kb 40 mp-re 1641 Hz-en 
+sample <- sampleFull[0:460, ]
+createPlotHertz(1641) 
+
+# 500 000-nél nagyobb értékek megjelölése
+labelVector <- rep(0,nrow(sample))
+for (i in 1:nrow(sample)) {
+  if( sample[i,"Hz1641"] > 500000)
+    labelVector[i] <- 1
+}
+
+sample$label <- labelVector
+sampleLabeled <- sample
+
+# csavarás 1950 Hz körül 
+createPlotHertz(1945) + geom_vline(xintercept = c(5000,11750, 26800,33000),
+                                   colour="red",
+                                   linetype = "longdash",
+                                   size = 1,5)
+
 ###################################### Label Dataset ######################################
 
 #create labels
@@ -55,7 +77,6 @@ labelRow(sampleLabeled,136000,137000,1)
 labelRow(sampleLabeled,171000,172000,1)
 labelRow(sampleLabeled,172500,174000,1)
 labelRow(sampleLabeled,174500,176000,1)
-
 
 ###################################### EDA ######################################
 
@@ -123,6 +144,8 @@ for (i in 1:kMax) {
   print(paste("Round: ",i,"/",kMax," -- Accuracy: ", result[i],sep=""))
   
 }
+result
+
 
 ###################################### SVM ######################################
 sampleLabeled.training.norm.svm <- sampleLabeled.training
