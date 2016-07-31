@@ -88,6 +88,7 @@ compareSvmParamsAccuracy <- function(costs) {
       #evaluate model
       evaluateModel(svmPrediction, sampleLabeled.testLabels)
       result[[kernel, cost]] <- accuracy
+      print(paste("Evaluating: ",kernel," with cost function = ",cost, sep=""))
     }
   }
   print(result)
@@ -113,6 +114,7 @@ compareSvmParamsSensitivity <- function(costs) {
       #evaluate model
       evaluateModel(svmPrediction, sampleLabeled.testLabels)
       result[[kernel, cost]] <- sensitivityMeasure
+      print(paste("Evaluating: ",kernel," with cost function = ",cost, sep=""))
     }
   }
   print(result)
@@ -138,6 +140,7 @@ compareSvmParamsAuc <- function(costs) {
       #evaluate model
       evaluateModel(svmPrediction, sampleLabeled.testLabels)
       result[[kernel, cost]] <- auc
+      print(paste("Evaluating: ",kernel," with cost function = ",cost, sep=""))
     }
   }
   print(result)
