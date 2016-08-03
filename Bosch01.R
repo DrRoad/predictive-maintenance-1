@@ -32,22 +32,83 @@ timeFrameMilliSecond <- 600000
 setupDataFrame(sampleFull, sampleRate, windowsSize, timeFrameMilliSecond)
 
 sample <- sampleFull[293:2074, ]
+sample <- sampleFull
+
+###################################### legrepzentánsabb Hz kiválasztása #########################
+
+sample <- sampleFull[0:2000, ]
+
+# turn off scientific notations
+options("scipen"=10)
+
+hertzek <- c("Hz1629","Hz1641","Hz1652","Hz1664","Hz1676")
+amps <- c(100000,250000,500000,750000)
+
+result <- data.frame(matrix(NA, nrow = 5, ncol = 4))
+names(result) <- amps
+rownames(result) <- hertzek
+
+for (hertz in hertzek) {
+  for (amp in amps) {
+    
+    print(paste("Evaluating ",hertz," for value: ",amp,sep=""))
+    sampleLabeled <- sample %>% mutate(label = ifelse(sample[[hertz]] > amp,1,0))
+    
+    # Randomize 
+    sampleLabeled <- sampleLabeled[sample(1:nrow(sampleLabeled)),]
+    
+    #split
+    ind <- sample(2, nrow(sampleLabeled), replace=TRUE, prob=c(0.7, 0.3)) 
+    sampleLabeled$label <- as.factor(sampleLabeled$label)
+    
+    sampleLabeled.training <- sampleLabeled[ind == 1, 2:ncol(sampleLabeled)]
+    sampleLabeled.test <- sampleLabeled[ind == 2, 2:ncol(sampleLabeled)] 
+    
+    sampleLabeled.trainLabels <- sampleLabeled[ind==1, 2]
+    sampleLabeled.testLabels <- sampleLabeled[ind==2, 2] 
+    
+    sampleLabeled.training.norm.svm <- sampleLabeled.training
+    sampleLabeled.test.norm.svm <- sampleLabeled.test
+    sampleLabeled.training.norm.svm[,-1] <- as.data.frame(lapply(sampleLabeled.training[,-1], normalize) )
+    sampleLabeled.test.norm.svm[,-1] <- as.data.frame(lapply(sampleLabeled.test[,-1], normalize)) 
+    
+    
+    ########## evaluate simple model
+    if (max(as.numeric(sampleLabeled.testLabels)) != 1) {
+      
+      
+      ########## simple model: kernel = polydot, c = 2
+      svmModel  <- ksvm(label ~ .,
+                        data = sampleLabeled.training.norm.svm ,
+                        kernel ="polydot",
+                        C=2)
+      
+      svmPrediction  <- predict(svmModel ,sampleLabeled.test.norm.svm ,type="response")
+      
+      evaluateModel(svmPrediction,sampleLabeled.testLabels)
+      result[[hertz, toString(amp)]] <- auc
+    }else{
+      print(paste("No valid predictions for: ",hertz,sep=""))
+      result[[hertz, toString(amp)]] <- 0
+    }
+    
+  }
+  
+}
+result
+
 
 ###################################### Label dataset for given Hz #########################
 
 # "telefoncsörgés" (1610-1680 Hz) ábrázolása első kb 40 mp-re 1641 Hz-en 
 sample <- sampleFull[0:460, ]
-createPlotHertz(1641) 
 
-# 500 000-nél nagyobb értékek megjelölése
-labelVector <- rep(0,nrow(sample))
-for (i in 1:nrow(sample)) {
-  if( sample[i,"Hz1641"] > 500000)
-    labelVector[i] <- 1
-}
+sample <- sampleFull[0:2000, ]
 
-sample$label <- labelVector
-sampleLabeled <- sample
+createPlotHertz(1629) 
+
+sampleLabeled <- sample %>% mutate(label = ifelse(Hz1641 > 500000,1,0))
+sampleLabeled <- sample %>% mutate(label = ifelse(Hz1629 > 750000,1,0))
 
 # csavarás 1950 Hz körül 
 createPlotHertz(1945) + geom_vline(xintercept = c(5000,11750, 26800,33000),

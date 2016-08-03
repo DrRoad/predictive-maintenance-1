@@ -40,28 +40,66 @@ normalize <- function(x) {
 }
 
 evaluateModel <- function(prediction,label,print ="no"){
-  confTable  <- table(Predicted = prediction ,Actual = label)
-  sensitivityMeasure <<- percent(sensitivity(confTable, positive = "1"))
-  specificity <- percent(specificity(confTable, negative = "0"))
-  precision <- ifelse(is.finite(posPredValue(confTable, positive = "1") == TRUE),percent(posPredValue(confTable, positive = "1")),0) 
-  recall <- percent(sensitivity(confTable, positive = "1"))
+  confTable  <- table(Predicted = prediction , Actual = label)
   
-  pred <- prediction(predictions = as.numeric(prediction), labels = as.numeric(label))
-  perf <- performance(pred, measure = "tpr", x.measure = "fpr")
-
+  sensitivityMeasure <<-
+    ifelse(is.finite(sensitivity(confTable, positive = "1")) == TRUE,
+           percent(sensitivity(confTable, positive = "1")),
+           0)
+  specificity <-
+    ifelse(is.finite(specificity(confTable, negative = "0")) == TRUE,
+           percent(specificity(confTable, negative = "0")),
+           0)
+  
+  precision <-
+    ifelse(is.finite(posPredValue(confTable, positive = "1")) == TRUE,
+           percent(posPredValue(confTable, positive = "1")),
+           0)
+  
+  recall <-
+    ifelse(is.finite(sensitivity(confTable, positive = "1")) == TRUE,
+           percent(sensitivity(confTable, positive = "1")),
+           0)
+  
+  pred <-
+    prediction(predictions = as.numeric(prediction),
+               labels = as.numeric(label))
+  
+  perf <-
+    performance(pred, measure = "tpr", x.measure = "fpr")
   
   perf.auc <- performance(pred, measure = "auc")
-  auc <<- round(unlist(perf.auc@y.values),4)
-  accuracy <<- percent((sum(prediction== label))/length(label)) 
+  auc <<- round(unlist(perf.auc@y.values), 4)
+  accuracy <<- percent((sum(prediction == label)) / length(label))
   
   results <- cbind(
-    Measure = c("Accuracy","Sensitivity", "Specificity", "Precision", "Recall", "AUC"),
-    Value = c(accuracy,sensitivityMeasure, specificity, precision, recall, auc)
+    Measure = c(
+      "Accuracy",
+      "Sensitivity(TPR) - TP/(TP+FN)",
+      "Specificity(TNR) - TN/(TN+FP)",
+      "Precision - TP/(TP+FP)",
+      "Recall - TP/(TP+FN)",
+      "AUC"
+    ),
+    Value = c(
+      accuracy,
+      sensitivityMeasure,
+      specificity,
+      precision,
+      recall,
+      auc
+    )
   )
   
   if (print == "print") {
-    plot(perf, main = "ROC curve", col = "blue", lwd = 3)
-    abline(a = 0, b = 1, lwd = 2, lty = 2)
+    plot(perf,
+         main = "ROC curve",
+         col = "blue",
+         lwd = 3)
+    abline(a = 0,
+           b = 1,
+           lwd = 2,
+           lty = 2)
     print(results)
     print(confTable)
   }
