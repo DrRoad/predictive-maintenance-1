@@ -1,29 +1,19 @@
 ###################################### Load UDFs & packages ######################################
-setwd("C:/Users/dtakacs/Desktop/Bosch")
 
 # load UDFs
 source("functionsPlot.r")
 source("functionsUtility.r")
 
-packages <-
-  c("ggplot2",
-    "dplyr",
-    "scales",
-    "grid",
-    "class",
-    "gmodels",
-    "caret",
-    "ROCR",
-    "kernlab",
-    "e1071",
-    "nnet",
-    "corrplot")
-
+packages <- c("ggplot2","dplyr","scales","grid","class","gmodels","caret","ROCR","kernlab","e1071","corrplot")
 installAndLoadPackages(packages)
+
+# turn off scientific notations
+options("scipen"=10)
 
 ###################################### Load & Transform Dataset ######################################
 
 sampleFull <- read.csv("csavarozo1.csv", sep = ";")
+sampleFull <- read.csv("C:/Users/dtakacs/Desktop/testpad_2016-08-21.csv", sep = ";")
 
 sampleRate <- 48000
 windowsSize <- 4096
@@ -31,15 +21,18 @@ timeFrameMilliSecond <- 600000
 
 setupDataFrame(sampleFull, sampleRate, windowsSize, timeFrameMilliSecond)
 
-sample <- sampleFull[293:2074, ]
-sample <- sampleFull
-
 ###################################### legrepzentánsabb Hz kiválasztása #########################
+sample <- sampleFull[0:1000, ]
+labelRow(sample,143000,144000,1)
+labelRow(sampleLabeled,144500,146000,1)
+labelRow(sampleLabeled,147500,148500,1)
+labelRow(sampleLabeled,156500,157500,1)
+labelRow(sampleLabeled,158500,159500,1)
+labelRow(sampleLabeled,160500,161500,1)
 
-sample <- sampleFull[0:2000, ]
 
-# turn off scientific notations
-options("scipen"=10)
+sample <- sampleFull[1641:1782, ]
+sample <- sampleFull[0:1000,]
 
 hertzek <- c("Hz1629","Hz1641","Hz1652","Hz1664","Hz1676")
 amps <- c(100000,250000,500000,750000)
@@ -72,28 +65,19 @@ for (hertz in hertzek) {
     sampleLabeled.training.norm.svm[,-1] <- as.data.frame(lapply(sampleLabeled.training[,-1], normalize) )
     sampleLabeled.test.norm.svm[,-1] <- as.data.frame(lapply(sampleLabeled.test[,-1], normalize)) 
     
-    
-    ########## evaluate simple model
+    ########## compare AUC if needed
     if (max(as.numeric(sampleLabeled.testLabels)) != 1) {
+      svmModel  <- ksvm(label ~ ., data = sampleLabeled.training.norm.svm,kernel = "polydot",C = 2)
+      svmPrediction  <- predict(svmModel , sampleLabeled.test.norm.svm , type = "response")
+      evaluateModel(svmPrediction, sampleLabeled.testLabels)
       
-      
-      ########## simple model: kernel = polydot, c = 2
-      svmModel  <- ksvm(label ~ .,
-                        data = sampleLabeled.training.norm.svm ,
-                        kernel ="polydot",
-                        C=2)
-      
-      svmPrediction  <- predict(svmModel ,sampleLabeled.test.norm.svm ,type="response")
-      
-      evaluateModel(svmPrediction,sampleLabeled.testLabels)
       result[[hertz, toString(amp)]] <- auc
-    }else{
-      print(paste("No valid predictions for: ",hertz,sep=""))
+      
+    } else {
+      print(paste("No valid predictions for: ", hertz, sep = ""))
       result[[hertz, toString(amp)]] <- 0
     }
-    
   }
-  
 }
 result
 
@@ -102,13 +86,11 @@ result
 
 # "telefoncsörgés" (1610-1680 Hz) ábrázolása első kb 40 mp-re 1641 Hz-en 
 sample <- sampleFull[0:460, ]
+sample <- sampleFull[0:3000, ]
 
-sample <- sampleFull[0:2000, ]
-
-createPlotHertz(1629) 
+createPlotHertz(1641) 
 
 sampleLabeled <- sample %>% mutate(label = ifelse(Hz1641 > 500000,1,0))
-sampleLabeled <- sample %>% mutate(label = ifelse(Hz1629 > 750000,1,0))
 
 # csavarás 1950 Hz körül 
 createPlotHertz(1945) + geom_vline(xintercept = c(5000,11750, 26800,33000),
@@ -116,28 +98,6 @@ createPlotHertz(1945) + geom_vline(xintercept = c(5000,11750, 26800,33000),
                                    linetype = "longdash",
                                    size = 1,5)
 
-###################################### Label Dataset ######################################
-
-#create labels
-labelRow(sample,26500,28000,1)
-labelRow(sampleLabeled,28000,29000,1)
-labelRow(sampleLabeled,31000,32000,1)
-labelRow(sampleLabeled,40000,41000,1)
-labelRow(sampleLabeled,43000,44000,1)
-labelRow(sampleLabeled,46000,47000,1)
-labelRow(sampleLabeled,56000,57000,1)
-labelRow(sampleLabeled,85500,86500,1)
-labelRow(sampleLabeled,88500,89500,1)
-labelRow(sampleLabeled,90000,91000,1)
-labelRow(sampleLabeled,116000,117500,1)
-labelRow(sampleLabeled,118500,120000,1)
-labelRow(sampleLabeled,121000,122000,1)
-labelRow(sampleLabeled,132000,133000,1)
-labelRow(sampleLabeled,134000,135000,1)
-labelRow(sampleLabeled,136000,137000,1)
-labelRow(sampleLabeled,171000,172000,1)
-labelRow(sampleLabeled,172500,174000,1)
-labelRow(sampleLabeled,174500,176000,1)
 
 ###################################### EDA ######################################
 
@@ -182,7 +142,7 @@ knnPrediction <-
     train = sampleLabeled.training.norm.knn,
     test = sampleLabeled.test.norm.knn,
     cl = sampleLabeled.trainLabels,
-    k = 5
+    k = 3
   ) 
 
 ########## evaluate simple model
