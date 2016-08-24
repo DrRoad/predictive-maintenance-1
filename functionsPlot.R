@@ -11,6 +11,20 @@ createPlotHertz <- function(hertz, sampleSize = nrow(sample)){
   return(plot)
 }
 
+#create plot(line) for given Hz
+createPlotHertzBar <- function(hertz){
+  columnName <- paste("Hz",hertz,sep="")
+  sampleTemp <- sample
+  plot <- ggplot(data = sampleTemp,
+                 aes(x = timeMs, y = sampleTemp[columnName],fill = sampleTemp[columnName] >500000)) + 
+    geom_bar(stat = "identity") + 
+    ggtitle(paste(hertz,"Hz")) + 
+    scale_y_continuous(name="Value", labels = comma) +
+    scale_x_continuous(name = "Elapsed Ms" , breaks = seq(0,max(sample$timeMs),round(max(sample$timeMs)/20)),0) +
+    scale_fill_manual(name = 'Labeled', values = setNames(c('brown','cadetblue4'),c(T, F)))
+  return(plot)
+}
+
 #create plot(line) for given ms
 createPlotMs <- function(milliSecond,sampleSize = ncol(sample)-2){
   sampleTemp <- as.data.frame(t(sample[toString(milliSecond),2:ncol(sample)]))
