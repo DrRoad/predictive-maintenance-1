@@ -184,4 +184,7 @@ compareSvmParamsAuc <- function(costs) {
   print(result)
 }
 
+compute_rmse <- function(predictions, actual) { 
+  mean( sqrt((predictions - actual) ^ 2 )) 
+}
 
